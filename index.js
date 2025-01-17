@@ -7,6 +7,7 @@ const { connectcloudinary } = require('./src/config/cloudinary')
 const Eventrouter = require('./src/api/routes/event')
 const { convertObject } = require('./src/utils/Objectcreat')
 const { Productrouter } = require('./src/api/routes/product')
+const Horariorouter = require('./src/api/routes/horario')
 require('dotenv').config()
 
 const app = express()
@@ -27,6 +28,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/staffs', Staffrouter)
 app.use('/api/v1/eventos', Eventrouter)
 app.use('/api/v1/products', Productrouter)
+app.use('/api/v1/horario', Horariorouter)
 app.listen(3000, () => {
   console.log('http://localhost:3000')
 })

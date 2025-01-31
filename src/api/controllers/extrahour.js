@@ -4,37 +4,48 @@ const User = require('../modelos/staff')
 const getExtraHourById = async (req, res, next) => {
   try {
     const { id } = req.params
-    const requestinguser = req.user
-    const extrahour = await Extrahour.findOne({
-      name_of_the_staff: id
-    }).populate('name_of_the_staff', 'name')
-
-    if (!extrahour) {
-      return res.status(404).json({ message: 'Extra hour record not found.' })
+    const requestingUser = req.user
+    const extraHours = await Extrahour.find({ name_of_the_staff: id }).populate(
+      'name_of_the_staff',
+      'name'
+    )
+    if (!extraHours || extraHours.length === 0) {
+      return res.status(404).json({ message: 'No extra hour records found.' })
     }
 
-    const isManager =
-      requestinguser.role === 'chef ejucutivo' ||
-      requestinguser.role === 'jefe de sala'
+    const isManager = ['chef ejecutivo', 'jefe de sala'].includes(
+      requestingUser.role
+    )
+    const authorizedExtraHours = extraHours.filter((extraHour) => {
+      if (
+        !extraHour.name_of_the_staff ||
+        !Array.isArray(extraHour.name_of_the_staff)
+      ) {
+        return false
+      }
 
-    const isAuthorized =
-      isManager ||
-      extrahour.name_of_the_staff._id.toString() ===
-        requestinguser._id.toString()
+      return (
+        isManager ||
+        extraHour.name_of_the_staff.some(
+          (staff) => staff._id.toString() === requestingUser._id.toString()
+        )
+      )
+    })
 
-    if (!isAuthorized) {
+    if (authorizedExtraHours.length === 0) {
       return res.status(403).json({
-        message: 'You are not authorized to view this record.'
+        message: 'You are not authorized to view these records.'
       })
     }
 
+    // Return the authorized records
     return res.status(200).json({
       message: 'Extra hour details fetched successfully.',
-      extrahour
+      extraHours: authorizedExtraHours
     })
   } catch (error) {
     console.error(error)
-    return res.status(400).json({
+    return res.status(500).json({
       message: 'Unable to fetch extra hour details.',
       error: error.message
     })

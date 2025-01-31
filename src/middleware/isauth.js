@@ -4,7 +4,7 @@ const { verifytoken } = require('../utils/jwt')
 const isauth = async (req, res, next) => {
   try {
     const isauth = req.headers.authorization
-    console.log(isauth)
+    console.log('is auth is', isauth)
     const parsedtoken = isauth.split(' ')
     const token = parsedtoken[1]
     console.log('the splitted token ')

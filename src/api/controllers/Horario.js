@@ -129,7 +129,7 @@ const updatehorario = async (req, res, next) => {
     const requestinguser = req.user
 
     if (
-      requestinguser.role !== 'chef ejecutivo' &&
+      requestinguser.role !== 'chef ejucutivo' &&
       requestinguser.role !== 'jefe de sala'
     ) {
       console.log(requestinguser.role)

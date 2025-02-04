@@ -6,43 +6,50 @@ const gethorariobyid = async (req, res, next) => {
   try {
     const { id } = req.params
     const requestinguser = req.user
+
     const staff_details = await User.findById(id)
-    console.log(staff_details)
-    const horariostaff = await Horario.findOne({
+    if (!staff_details) {
+      return res.status(404).json({ message: 'Staff not found.' })
+    }
+
+    const horariostaff = await Horario.find({
       name_of_the_staff: staff_details._id
     }).populate('name_of_the_staff', 'name')
-    if (!horariostaff) {
+
+    if (!horariostaff || horariostaff.length === 0) {
       return res.status(404).json({ message: 'Horario not found.' })
     }
 
     const isManager =
-      requestinguser.role === 'chef ejucutivo' ||
+      requestinguser.role === 'chef ejecutivo' ||
       requestinguser.role === 'jefe de sala'
 
-    const isPartOfStaff = horariostaff.name_of_the_staff.some(
-      (staff) => staff._id.toString() === requestinguser._id.toString()
+    const isPartOfStaff = horariostaff.some((horario) =>
+      horario.name_of_the_staff.some(
+        (staff) => staff._id.toString() === requestinguser._id.toString()
+      )
     )
 
-    const isAuthorized = isManager || isPartOfStaff
-    if (!isAuthorized) {
-      return res
-        .status(403)
-        .json(
+    if (!isManager && !isPartOfStaff) {
+      return res.status(403).json({
+        message:
           'You are not authorized to see the duty of this particular person.'
-        )
+      })
     }
 
     return res.status(200).json({
-      message: `Horario details fetched successfully.`,
+      message: 'Horario details fetched successfully.',
       horario: horariostaff
     })
   } catch (error) {
     console.error(error)
-    return res
-      .status(400)
-      .json({ message: 'Unable to get the horario.', error: error.message })
+    return res.status(400).json({
+      message: 'Unable to get the horario.',
+      error: error.message
+    })
   }
 }
+
 const createhorario = async (req, res, next) => {
   try {
     const horariosData = req.body

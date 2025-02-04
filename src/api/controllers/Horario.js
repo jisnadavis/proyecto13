@@ -172,7 +172,6 @@ const updatehorario = async (req, res, next) => {
       }
       oldhorario.fecha = parsedDate
     }
-
     if (lugar) oldhorario.lugar = lugar
     if (Time) oldhorario.Time = Time
     if (status) oldhorario.status = status

@@ -45,7 +45,7 @@ const gethorariobyid = async (req, res, next) => {
 }
 const createhorario = async (req, res, next) => {
   try {
-    const { name_of_the_staff, fecha, lugar, Time, status } = req.body
+    const horariosData = req.body
     const requestinguser = req.user
     if (
       requestinguser.role !== 'chef ejucutivo' &&
@@ -56,6 +56,7 @@ const createhorario = async (req, res, next) => {
         .status(403)
         .json({ message: 'you are not organized to create horario' })
     }
+
     const isValidDate = (dateString) => {
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/
       if (!dateRegex.test(dateString)) return false
@@ -64,43 +65,56 @@ const createhorario = async (req, res, next) => {
       return !isNaN(parsedDate.getTime())
     }
 
-    if (!isValidDate(fecha)) {
-      return res.status(400).json({
-        message:
-          'Invalid date format. Please enter the date in yyyy-mm-dd format.'
-      })
-    }
-
-    const parsedDate = new Date(fecha)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    if (parsedDate < today) {
-      return res
-        .status(400)
-        .json({ message: 'The date should be greater than or equal to today.' })
-    }
-    if (!name_of_the_staff || !lugar || !Time || !status) {
-      return res.status(400).json({ message: 'All fields are required.' })
+
+    const createdHorarios = []
+
+    for (let horarioData of horariosData) {
+      const { name_of_the_staff, fecha, lugar, Time, status } = horarioData
+
+      if (!isValidDate(fecha)) {
+        return res.status(400).json({
+          message:
+            'Invalid date format. Please enter the date in yyyy-mm-dd format.'
+        })
+      }
+
+      const parsedDate = new Date(fecha)
+      if (parsedDate < today) {
+        return res.status(400).json({
+          message: 'The date should be greater than or equal to today.'
+        })
+      }
+
+      if (!name_of_the_staff || !lugar || !Time || !status) {
+        return res.status(400).json({ message: 'All fields are required.' })
+      }
+
+      const newHorario = new Horario({
+        name_of_the_staff,
+        fecha: parsedDate,
+        lugar,
+        Time,
+        status
+      })
+
+      await newHorario.save()
+      createdHorarios.push(newHorario)
     }
 
-    const newhorario = new Horario({
-      name_of_the_staff,
-      fecha: parsedDate,
-      lugar,
-      Time,
-      status
+    return res.status(200).json({
+      message: 'Horarios created successfully',
+      horarios: createdHorarios
     })
-    await newhorario.save()
-    return res
-      .status(200)
-      .json({ message: 'horrario created successfully', horario: newhorario })
   } catch (error) {
     console.log(error)
     return res
       .status(400)
-      .json({ message: 'unable to create the horario', error: error.message })
+      .json({ message: 'Unable to create the horarios', error: error.message })
   }
 }
+
 const updatehorario = async (req, res, next) => {
   try {
     const { id } = req.params

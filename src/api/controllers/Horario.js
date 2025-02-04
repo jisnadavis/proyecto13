@@ -122,7 +122,7 @@ const updatehorario = async (req, res, next) => {
     const requestinguser = req.user
 
     if (
-      requestinguser.role !== 'chef ejucutivo' &&
+      requestinguser.role !== 'chef ejecutivo' &&
       requestinguser.role !== 'jefe de sala'
     ) {
       console.log(requestinguser.role)
@@ -135,19 +135,24 @@ const updatehorario = async (req, res, next) => {
     if (!staff_details) {
       return res.status(404).json({ message: 'Staff not found.' })
     }
-    const oldhorario = await Horario.findOne({
-      name_of_the_staff: staff_details._id
+
+    const horarios = await Horario.find({
+      name_of_the_staff: { $in: [staff_details._id] }
     })
-    if (!oldhorario) {
+
+    if (horarios.length === 0) {
       return res.status(404).json({ message: 'Horario not found.' })
     }
+
+    const oldhorario = horarios[0]
 
     if (name_of_the_staff) {
       const newStaff = await User.findById(name_of_the_staff)
       if (!newStaff) {
         return res.status(404).json({ message: 'New staff not found.' })
       }
-      oldhorario.name_of_the_staff = name_of_the_staff
+
+      oldhorario.name_of_the_staff = [newStaff._id]
     }
 
     if (fecha) {
@@ -157,6 +162,7 @@ const updatehorario = async (req, res, next) => {
         const parsedDate = new Date(datestring)
         return !isNaN(parsedDate.getTime()) ? parsedDate : null
       }
+
       const parsedDate = isValidDate(fecha)
       if (!parsedDate) {
         return res.status(400).json({
@@ -167,13 +173,12 @@ const updatehorario = async (req, res, next) => {
       oldhorario.fecha = parsedDate
     }
 
-    // Update other fields
     if (lugar) oldhorario.lugar = lugar
     if (Time) oldhorario.Time = Time
     if (status) oldhorario.status = status
 
-    // Save updated horario
     await oldhorario.save()
+
     return res
       .status(200)
       .json({ message: 'Horario updated successfully.', horario: oldhorario })

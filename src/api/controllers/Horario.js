@@ -21,7 +21,7 @@ const gethorariobyid = async (req, res, next) => {
     }
 
     const isManager =
-      requestinguser.role === 'chef ejecutivo' ||
+      requestinguser.role === 'chef ejucutivo' ||
       requestinguser.role === 'jefe de sala'
 
     const isPartOfStaff = horariostaff.some((horario) =>
